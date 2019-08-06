@@ -1,16 +1,16 @@
-STD = -std=c++11
+STD = -std=c++17
 
 OPT = -O2
 
 FLAGS = -pthread
-FLAGS += -fopenmp
-# FLAGS += -ffast-math
+# FLAGS += -fopenmp
+FLAGS += -ffast-math
 FLAGS += -I$(HOME)/local/include
 
 
-default: cuda
+default: cpp
 
-main:
+cpp:
 	$(CXX) $(STD) $(OPT) $(FLAGS) matrix/nu_critical.cpp -o nu_critical
 
 
