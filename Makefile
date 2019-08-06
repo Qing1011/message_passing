@@ -1,7 +1,7 @@
 STD = -std=c++11
 OPT = -O2
 FLAGS = -pthread
-# FLAGS += -fopenmp
+FLAGS += -fopenmp
 # FLAGS += -ffast-math
 FLAGS += -I$(HOME)/local/include
 

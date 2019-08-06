@@ -56,21 +56,32 @@ std::vector<T> nu_critical(const std::vector<T> &z_list,
                            const std::vector<T> &x_list)
 {
     TRACE_SCOPE(__func__);
-    std::vector<T> results(z_list.size() * theta_list.size() * x_list.size());
+
+    const int z_size = z_list.size();
+    const int theta_size = theta_list.size();
+    const int x_size = x_list.size();
+
+    const auto idx = [=](int i, int j, int k) {
+        // [z_size, theta_size, x_size]
+        // [i     , j         ,      k]
+        return (i * theta_size + j) * x_size + k;
+    };
+
+    std::vector<T> results(z_size * theta_size * x_size);
     std::cout << "result size: " << results.size() << std::endl;
 
     const int m = std::thread::hardware_concurrency();
 
-    int idx = 0;
-
-    // #pragma omp parallel for
-    for (int i = 0; i < z_list.size(); ++i) {
-        // TRACE_SCOPE("for th");
-        for (int j = 0; j < theta_list.size(); ++j) {
-            for (int k = 0; k < x_list.size(); ++k) {
-                const T h = H(theta_list[j], x_list[k], z_list[i]);
-                results[idx++] = h;
-                // printf("%d %f\n", idx, h);
+    for (int i = 0; i < z_size; ++i) {
+        printf("%d/%d\n", i, z_size);
+        {
+            TRACE_SCOPE("for z");
+#pragma omp parallel for
+            for (int j = 0; j < theta_size; ++j) {
+                for (int k = 0; k < x_size; ++k) {
+                    const T h = H(theta_list[j], x_list[k], z_list[i]);
+                    results[idx(i, j, k)] = h;
+                }
             }
         }
     }
@@ -83,11 +94,13 @@ int main()
 
     using T = float;
 
-    const T z_step = 0.5;
+    // const T z_step = 0.1;
     // const T theta_step = 0.01;
     // const T x_step = 0.002;
-    const T theta_step = 0.5;
-    const T x_step = 0.5;
+
+    const T z_step = 0.1;
+    const T theta_step = 0.01;
+    const T x_step = 0.2;
 
     const auto z_list = range<T>(1, 16, z_step);
     const auto theta_list = range<T>(0.01, 1, theta_step);
