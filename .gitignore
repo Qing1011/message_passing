@@ -1,4 +1,5 @@
-*.pyc
 __pycache__
+*.pyc
 /nu_critical
+/nu_critical_gpu
 /results.txt
