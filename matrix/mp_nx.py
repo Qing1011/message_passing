@@ -11,16 +11,23 @@ from scipy.sparse.linalg import eigs
 import pickle
 import multiprocessing as mp
 from heapq import nsmallest
+from scipy.sparse import csr_matrix,lil_matrix
+from decimal import Decimal
 
+# def weight(x,d,m):
+#     return comb(d-2, m-1, exact=True)*x**(m-1)*(1-x)**(d-m-1)
 
 def weight(x,d,m):
-    return comb(d-2, m-1, exact=True)*x**(m-1)*(1-x)**(d-m-1)
+    a = Decimal(comb(d-2, m-1, exact=True))
+    b = Decimal(x**(m-1))
+    c = Decimal((1-x)**(d-m-1))
+    return float(a*b*c)
 
 
 def Jacobian_h(G,eta,theta):
     E = np.array(G.edges())
     n = len(E)
-    NB = np.zeros((2*n,2*n))
+    NB = lil_matrix((2*n,2*n))
     v_diag = np.zeros(2*n)
     for idx in range(n):
         e = E[idx] # e=(i,j)  i<j , idx = i<-j , idx+n = j<-i
@@ -46,14 +53,30 @@ def Jacobian_h(G,eta,theta):
                 list3.append(idx_k)                
         # update entries from idx lists to obtain NB
         for i1 in list1:
-            NB[idx][i1] = 1
-            NB[i1+n][idx+n] = 1
+            NB[idx,i1] = 1
+            NB[i1+n,idx+n] = 1
         for i2 in list2:
-            NB[idx][i2+n] = 1
+            NB[idx,i2+n] = 1
         for i3 in list3:
-            NB[idx+n][i3] = 1
-    D=np.diag(v_diag)
-    return np.multiply(np.matmul(D,NB), 1-eta)
+            NB[idx+n,i3] = 1
+    D = lil_matrix((2*n,2*n))
+    D.setdiag(v_diag)
+    return np.multiply(np.multiply(D,NB), 1-eta)
+
+
+# def theta_eigen(g_i,rho_0,theta_i):
+#     #db = HM(g_i, rho_0, theta_i)
+#     #dh_m_i = np.multiply(db,1-rho_0)
+#     dh_m_i = Jacobian_h(g_i,rho_0,theta_i)
+#     try:
+#         vals_i, vecs_i = eigs(dh_m_i, k=6)
+#     except:
+#         vals_i = [0]
+#     eigen_i = {}
+#     vals_abs = [abs(i) for i in vals_i]
+#     eigen_i['eigen_abs'] = max(vals_abs)
+#     #eigen_i['eigen_diff'] = abs(max(vals_abs)-1)
+#     return {theta_i : eigen_i}
 
 
 def theta_eigen(g_i,rho_0,theta_i):
@@ -64,9 +87,9 @@ def theta_eigen(g_i,rho_0,theta_i):
         vals_i, vecs_i = eigs(dh_m_i, k=6)
     except:
         vals_i = [0]
-    eigen_i = {}
+    eigen_i = []
     vals_abs = [abs(i) for i in vals_i]
-    eigen_i['eigen_abs'] = max(vals_abs)
+    eigen_i = max(vals_abs)
     #eigen_i['eigen_diff'] = abs(max(vals_abs)-1)
     return {theta_i : eigen_i}
 
