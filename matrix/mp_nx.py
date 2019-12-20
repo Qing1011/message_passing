@@ -25,10 +25,18 @@ def weight(x,d,m):
 
 
 def Jacobian_h(G,eta,theta):
-    E = np.array(G.edges())
+    E = np.array(list(G.edges()))
     n = len(E)
     NB = lil_matrix((2*n,2*n))
     v_diag = np.zeros(2*n)
+    prevs = dict()
+    succs = dict()
+    for idx in range(n):
+        e = E[idx]
+        i, j = e
+        succs.setdefault(j, []).append(idx)
+        prevs.setdefault(i, []).append(idx)
+
     for idx in range(n):
         e = E[idx] # e=(i,j)  i<j , idx = i<-j , idx+n = j<-i
         i = e[0]
@@ -41,16 +49,10 @@ def Jacobian_h(G,eta,theta):
         if d_i >= 2:
             m_i = np.floor(d_i*theta)       
             v_diag[idx+n] = weight(eta,d_i,m_i)
-        list1 = []    # idx with i<j<k
-        list2 = []    # idx with i<j>k
-        list3 = []    # idx with j>i<k
-        for idx_k in range(n): 
-            if E[idx_k][0] == j:
-                list1.append(idx_k)
-            if E[idx_k][1] == j and E[idx_k][0] != i:
-                list2.append(idx_k)
-            if E[idx_k][0] == i and E[idx_k][1] != j:
-                list3.append(idx_k)                
+
+        list1 = prevs.get(j, [])
+        list2 = list(set(succs.get(j, [])) - set(prevs.get(i, [])))
+        list3 = list(set(prevs.get(i, [])) - set(succs.get(j, [])))
         # update entries from idx lists to obtain NB
         for i1 in list1:
             NB[idx,i1] = 1
@@ -59,9 +61,51 @@ def Jacobian_h(G,eta,theta):
             NB[idx,i2+n] = 1
         for i3 in list3:
             NB[idx+n,i3] = 1
+
     D = lil_matrix((2*n,2*n))
     D.setdiag(v_diag)
     return np.multiply(np.multiply(D,NB), 1-eta)
+
+
+# def Jacobian_h(G,eta,theta):
+#     E = np.array(G.edges())
+#     n = len(E)
+#     NB = lil_matrix((2*n,2*n))
+#     v_diag = np.zeros(2*n)
+#     for idx in range(n):
+#         e = E[idx] # e=(i,j)  i<j , idx = i<-j , idx+n = j<-i
+#         i = e[0]
+#         j = e[1]
+#         d_j = G.degree[j]
+#         if d_j >= 2:
+#             m_j = np.floor(d_j*theta)
+#             v_diag[idx] = weight(eta,d_j,m_j)
+#         d_i = G.degree[i]
+#         if d_i >= 2:
+#             m_i = np.floor(d_i*theta)       
+#             v_diag[idx+n] = weight(eta,d_i,m_i)
+#         list1 = []    # idx with i<j<k
+#         list2 = []    # idx with i<j>k
+#         list3 = []    # idx with j>i<k
+#         for idx_k in range(n): 
+#             if E[idx_k][0] == j:
+#                 list1.append(idx_k)
+#             if E[idx_k][1] == j and E[idx_k][0] != i:
+#                 list2.append(idx_k)
+#             if E[idx_k][0] == i and E[idx_k][1] != j:
+#                 list3.append(idx_k)                
+#         # update entries from idx lists to obtain NB
+#         for i1 in list1:
+#             NB[idx,i1] = 1
+#             NB[i1+n,idx+n] = 1
+#         for i2 in list2:
+#             NB[idx,i2+n] = 1
+#         for i3 in list3:
+#             NB[idx+n,i3] = 1
+
+#     D = lil_matrix((2*n,2*n))
+#     D.setdiag(v_diag)
+#     return np.multiply(np.multiply(D,NB), 1-eta)
 
 
 # def theta_eigen(g_i,rho_0,theta_i):
@@ -95,7 +139,8 @@ def theta_eigen(g_i,rho_0,theta_i):
 
 
 def find_critical_search(eta, g, g_name):
-    theta_list0 = list(np.arange(0.01,1,0.01))
+    #theta_list0 = list(np.arange(0.01,1,0.01))
+    theta_list0 = [i/20 for i in range(20)]
     p = mp.Pool(mp.cpu_count())
     #(worker, (i, 4), callback=callback)
     result_0 = {}

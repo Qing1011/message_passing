@@ -61,36 +61,33 @@ def rho(z_all,x_step=None):
 
 
 def main():
-    #s_new = sys.argv[1]
     s = sys.argv[1]
-    # z_in_f = []
-    # import glob
-    # import os
-    # path = '../results/er/z_rho/'
-    # for filename in glob.glob(os.path.join(path, '*.p')):
-    #     s0 = filename.replace('../results/er/z_rho/z_theta_x_rho_','')
-    #     ss = s0.replace('.p','')
-    #     z_in_f.append(int(ss))
-    
-    # left = list(list(set(range(6200))-set(z_in_f)))
-    # s = left[int(s_new)]
-    z_index = int(np.floor((int(s)-1)/200))
     z_list = list(np.arange(1,16.5,0.5))
-    z_i = z_list[z_index]
-    # N = 10000
-
-    theta_list = np.arange(0.01,1.01,0.01)
+    # seperate the jobs to two parts 1 - 8 and 8 - 16.5
+    #z_list = [4,5]
+    N = 5000
+    g_folder = '../results/er/z_rho/graph_z/'
+    p_list = [z_i/N for z_i in z_list]
+    # for z_i in z_list:
+    #     p_i = z_i/N
+    #     g_i = nx.fast_gnp_random_graph(N, p_i)
+    #     nx.write_graphml(g_i, g_folder+'g_{}.graphml'.format(z_i))
+    
+    #g_z_list = (folder_name, )
+    theta_list = np.arange(0.01,1,0.05)
     theta_list = theta_list.tolist()
     theta_list.reverse()
-    x_list = list(np.arange(0.0002,0.01,0.0002))+list(np.arange(0.01,1,0.01))
-    param_grid = {'z':[z_i], 'theta': theta_list, 'x' : x_list}
+    x_list = list(np.arange(0.001,1,0.01))
+    param_grid = {'z':z_list, 'theta': theta_list, 'x' : x_list}
     grid = ParameterGrid(param_grid)
     
+    #x_step = 0.002
+    #for s in range(100):
     p = mp.Pool(30)
     results = p.map_async(rho, grid).get()
     p.close()
     p.join() 
     pickle.dump(results, open('../results/er/z_rho/z_theta_x_rho_{}.p' .format(s), 'wb'))
 
-# if __name__== "__main__":
-#     main()
+if __name__== "__main__":
+    main()

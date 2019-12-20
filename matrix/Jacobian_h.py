@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Created on Wed Jul 17 19:02:07 2019
@@ -17,6 +16,7 @@ import numpy as np
 #import matplotlib.pyplot as plt
 #import time
 import networkx as nx
+from scipy.sparse import csr_matrix,lil_matrix
 
 
 N=100

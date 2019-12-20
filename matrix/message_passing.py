@@ -25,7 +25,6 @@ def NBM(g,edges):
     l_nodes = list(g_l.nodes())
     return A, l_nodes
 
-
 def DM(g,eta,theta,edges):
     n = len(edges)
     v_diag = np.zeros(n)
