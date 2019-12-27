@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 
 
-def gen_file(jn,fn):
+def gen_file(fn):
     lines = [
         '#PBS -l walltime=23:00:00',
         '#PBS -l select=1:ncpus=1:mem=1gb',
         '#PBS -J 1-10',
         '',
         'SHARD_SIZE=10',
-        'SHARD_ID=%d # from 0 to 9' % jn,
+        'SHARD_ID=%d # from 0 to 9' % fn,
         '',
         'TASK_COUNT=1000',
         'TASK_ID=$((PBS_ARRAY_INDEX - 1))',
@@ -30,17 +30,15 @@ def gen_file(jn,fn):
         '    ./data/x_list-small.txt \\',
         '    $N $S',
     ]
-    filename = 'job-%d-%d.pbs' % (fn,jn)
+    filename = 'job-%d.pbs' % fn
     with open(filename, 'w') as f:
         for line in lines:
             f.write(line + '\n')
 
 
-def gen_files(job_n, file_n):
+def gen_files(file_n):
     for file_i in range(file_n):
-        for job_i in range(job_n):
-            print (job_i, file_i)
-            gen_file(job_i,file_i)
+        gen_file(file_i)
 
 
 #gen_files(10)
